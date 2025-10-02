@@ -38,6 +38,7 @@ export default function ShopModal() {
     address: '',
     phone: '',
     email: '',
+    password: '',
     timezone: 'UTC',
     currency: 'USD',
     is_active: true,
@@ -50,7 +51,8 @@ export default function ShopModal() {
 
   // Initialize form data
   useEffect(() => {
-    if (isEdit && editingShop) {
+    if (editModalOpen && editingShop) {
+      // Edit mode - populate with existing shop data (no password)
       setFormData({
         name: editingShop.name || '',
         shop_code: editingShop.shop_code || '',
@@ -66,6 +68,7 @@ export default function ShopModal() {
         ml_training_limit: editingShop.ml_training_limit || ''
       })
     } else {
+      // Create mode - reset form with empty password field
       setFormData({
         name: '',
         shop_code: '',
@@ -73,6 +76,7 @@ export default function ShopModal() {
         address: '',
         phone: '',
         email: '',
+        password: '',
         timezone: 'UTC',
         currency: 'USD',
         is_active: true,
@@ -82,7 +86,7 @@ export default function ShopModal() {
       })
     }
     setErrors({})
-  }, [isEdit, editingShop])
+  }, [createModalOpen, editModalOpen, editingShop])
 
   const handleInputChange = (field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
@@ -125,6 +129,15 @@ export default function ShopModal() {
       newErrors.email = 'Please enter a valid email address'
     }
 
+    // Password validation (only for create mode)
+    if (!editModalOpen) {
+      if (!formData.password) {
+        newErrors.password = 'Password is required'
+      } else if (formData.password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters'
+      }
+    }
+
     // Numeric fields
     if (formData.max_employees && (isNaN(formData.max_employees) || formData.max_employees <= 0)) {
       newErrors.max_employees = 'Max employees must be a positive number'
@@ -152,7 +165,8 @@ export default function ShopModal() {
     try {
       let result
       
-      if (isEdit) {
+      if (editModalOpen && editingShop) {
+        // Edit mode - no password field
         result = await dispatch(updateShop({
           shopId: editingShop.id,
           shopData: {
@@ -171,29 +185,55 @@ export default function ShopModal() {
           }
         }))
       } else {
-        result = await dispatch(createShop({
+        // Create mode - include password field
+        const createData = {
           name: formData.name.trim(),
           shop_code: formData.shop_code.trim(),
-          description: formData.description.trim(),
-          address: formData.address.trim(),
-          phone: formData.phone.trim(),
           email: formData.email.trim(),
+          password: formData.password,
           timezone: formData.timezone,
           currency: formData.currency,
-          is_active: formData.is_active,
-          max_employees: formData.max_employees ? parseInt(formData.max_employees) : null,
-          max_payroll_budget: formData.max_payroll_budget || null,
-          ml_training_limit: formData.ml_training_limit ? parseInt(formData.ml_training_limit) : null
-        }))
+          is_active: formData.is_active
+        }
+
+        // Only add optional fields if they have values
+        if (formData.description.trim()) {
+          createData.description = formData.description.trim()
+        }
+        if (formData.address.trim()) {
+          createData.address = formData.address.trim()
+        }
+        if (formData.phone.trim()) {
+          createData.phone = formData.phone.trim()
+        }
+        if (formData.max_employees && !isNaN(formData.max_employees)) {
+          createData.max_employees = parseInt(formData.max_employees)
+        }
+        if (formData.max_payroll_budget && !isNaN(formData.max_payroll_budget)) {
+          createData.max_payroll_budget = parseFloat(formData.max_payroll_budget)
+        }
+        if (formData.ml_training_limit && !isNaN(formData.ml_training_limit)) {
+          createData.ml_training_limit = parseInt(formData.ml_training_limit)
+        }
+
+        result = await dispatch(createShop(createData))
       }
 
-      if ((isEdit ? updateShop : createShop).fulfilled.match(result)) {
-        toast.success(`Shop ${isEdit ? 'updated' : 'created'} successfully!`)
+      if (result.type.endsWith('/fulfilled')) {
+        if (editModalOpen) {
+          toast.success('Shop updated successfully!')
+        } else {
+          toast.success('Shop created successfully!')
+        }
       } else {
-        toast.error(result.payload || `Failed to ${isEdit ? 'update' : 'create'} shop`)
+        if (editModalOpen) {
+          toast.error(result.payload || 'Failed to update shop')
+        } else {
+          toast.error(result.payload || 'Failed to create shop')
+        }
       }
     } catch (error) {
-      console.error(`${isEdit ? 'Update' : 'Create'} shop error:`, error)
+      console.error(`${editModalOpen ? 'Update' : 'Create'} shop error:`, error)
       toast.error('An unexpected error occurred')
     }
   }
@@ -259,6 +299,49 @@ export default function ShopModal() {
                 error={errors.email}
                 required
               />
+              {/* Password field - always show when not editing */}
+              {!editModalOpen && (
+                <FormInput
+                  label="Password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleInputChange('password')}
+                  placeholder="Enter shop password"
+                  error={errors.password}
+                  required
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-gray-900">Contact Information</h4>
+            <div className="space-y-3">
+              <FormInput
+                label="Description"
+                type="text"
+                value={formData.description}
+                onChange={handleInputChange('description')}
+                placeholder="Primary location"
+                error={errors.description}
+              />
+              <FormInput
+                label="Address"
+                type="text"
+                value={formData.address}
+                onChange={handleInputChange('address')}
+                placeholder="123 Main Street"
+                error={errors.address}
+              />
+              <FormInput
+                label="Phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleInputChange('phone')}
+                placeholder="555-0123"
+                error={errors.phone}
+              />
             </div>
           </div>
 
@@ -315,8 +398,8 @@ export default function ShopModal() {
               disabled={isLoading}
             >
               {isLoading 
-                ? (isEdit ? 'Updating Shop...' : 'Creating Shop...') 
-                : (isEdit ? 'Update Shop' : 'Create Shop')
+                ? (editModalOpen ? 'Updating Shop...' : 'Creating Shop...') 
+                : (editModalOpen ? 'Update Shop' : 'Create Shop')
               }
             </FormButton>
           </div>

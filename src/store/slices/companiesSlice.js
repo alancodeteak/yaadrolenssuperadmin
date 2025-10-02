@@ -118,7 +118,7 @@ export const createShop = createAsyncThunk(
     try {
       const token = localStorage.getItem('auth_token')
       
-      debugLog('Creating new shop with data:', shopData)
+      debugLog('Creating new shop with data:', JSON.stringify(shopData, null, 2))
       
       const response = await axios.post(`${API_BASE_URL}/superadmin/shops/`, shopData, {
         headers: {
@@ -133,6 +133,8 @@ export const createShop = createAsyncThunk(
       return response.data
     } catch (error) {
       debugLog('Error creating shop:', error)
+      debugLog('Error response:', error.response?.data)
+      debugLog('Error status:', error.response?.status)
       
       let errorMessage = 'Failed to create shop'
       
@@ -142,6 +144,16 @@ export const createShop = createAsyncThunk(
         errorMessage = 'Access denied'
       } else if (error.response?.status === 400) {
         errorMessage = error.response.data?.message || 'Invalid shop data provided'
+      } else if (error.response?.status === 422) {
+        // Handle validation errors
+        const validationErrors = error.response.data
+        if (validationErrors.detail) {
+          errorMessage = `Validation Error: ${JSON.stringify(validationErrors.detail)}`
+        } else if (validationErrors.message) {
+          errorMessage = validationErrors.message
+        } else {
+          errorMessage = `Validation Error: ${JSON.stringify(validationErrors)}`
+        }
       } else if (error.response?.status === 409) {
         errorMessage = 'Shop with this code already exists'
       } else if (error.code === 'ECONNABORTED') {

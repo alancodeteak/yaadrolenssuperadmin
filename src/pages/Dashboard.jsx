@@ -3,7 +3,6 @@ import { toast } from 'react-toastify'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { refreshDashboard, refreshComplete } from '../store/slices/dashboardSlice'
 import LoadingSpinner from '../components/common/LoadingSpinner'
-import ApiTest from '../components/common/ApiTest'
 
 export default function Dashboard() {
   const dispatch = useAppDispatch()
@@ -150,9 +149,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* API Test Tool - Remove this after debugging */}
-      <ApiTest />
     </div>
   )
 }
