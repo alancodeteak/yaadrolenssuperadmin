@@ -1,19 +1,68 @@
 import { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { toast } from 'react-toastify'
+import { useAppDispatch, useAppSelector } from '../store/hooks'
+import { loginUser, clearError } from '../store/slices/authSlice'
 
-export default function Login({ onLogin }) {
+export default function Login() {
+  const dispatch = useAppDispatch()
+  const { isLoading, error } = useAppSelector(state => state.auth)
   const [showPassword, setShowPassword] = useState(false)
   const [password, setPassword] = useState('')
-  const [shopOwnerId, setShopOwnerId] = useState('')
+  const [email, setEmail] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState({})
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword)
   }
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    const newErrors = {}
+    
+    if (!email.trim()) {
+      newErrors.email = 'Email is required'
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email address'
+    }
+    
+    if (!password.trim()) {
+      newErrors.password = 'Password is required'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (shopOwnerId && password && onLogin) {
-      onLogin({ shopOwnerId, password })
+    
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+    setErrors({})
+    dispatch(clearError()) // Clear any previous errors
+    
+    try {
+      const result = await dispatch(loginUser({ 
+        email: email.trim(), 
+        password 
+      }))
+      
+      if (loginUser.fulfilled.match(result)) {
+        toast.success('Login successful! Welcome back.')
+      } else {
+        toast.error(result.payload || 'Login failed. Please try again.')
+        setErrors({ general: result.payload || 'Login failed. Please try again.' })
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      toast.error('Login failed. Please try again.')
+      setErrors({ general: 'Login failed. Please try again.' })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -39,18 +88,36 @@ export default function Login({ onLogin }) {
           {/* Form Heading */}
           <h2 className="text-xl font-bold text-center mb-1 text-black">Log in</h2>
           
-          {/* Shop Owner ID Field */}
+          {/* General Error Message */}
+          {errors.general && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+              {errors.general}
+            </div>
+          )}
+          
+          {/* Email Field */}
           <div>
             <label className="block text-sm font-semibold mb-1 text-gray-500">
-              Shop Owner ID
+              Email
             </label>
             <input
-              type="text"
-              placeholder="Your Id"
-              value={shopOwnerId}
-              onChange={(e) => setShopOwnerId(e.target.value)}
-              className="w-full rounded-lg px-3 py-2 shadow-sm text-black bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              type="email"
+              placeholder="admin@example.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                if (errors.email) {
+                  setErrors(prev => ({ ...prev, email: '' }))
+                }
+              }}
+              className={`w-full rounded-lg px-3 py-2 shadow-sm text-black bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                errors.email ? 'border border-red-300 bg-red-50' : ''
+              }`}
+              disabled={isSubmitting || isLoading}
             />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
 
           {/* Password Field */}
@@ -63,8 +130,16 @@ export default function Login({ onLogin }) {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="**********"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg px-3 py-2 shadow-sm text-black bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300 pr-10"
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  if (errors.password) {
+                    setErrors(prev => ({ ...prev, password: '' }))
+                  }
+                }}
+                className={`w-full rounded-lg px-3 py-2 shadow-sm text-black bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300 pr-10 ${
+                  errors.password ? 'border border-red-300 bg-red-50' : ''
+                }`}
+                disabled={isSubmitting || isLoading}
               />
               <button
                 type="button"
@@ -72,14 +147,19 @@ export default function Login({ onLogin }) {
                 onClick={() => setShowPassword((v) => !v)}
                 tabIndex={-1}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
+                disabled={isSubmitting || isLoading}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            )}
             <div className="flex justify-end mt-1">
               <button
                 type="button"
                 className="text-xs text-blue-500 hover:underline focus:outline-none"
+                disabled={isSubmitting || isLoading}
               >
                 Forgot Password?
               </button>
@@ -89,9 +169,17 @@ export default function Login({ onLogin }) {
           {/* Login Button */}
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white font-bold py-2 rounded-lg mt-2 hover:bg-blue-600 transition"
+            disabled={isSubmitting || isLoading}
+            className="w-full bg-blue-500 text-white font-bold py-2 rounded-lg mt-2 hover:bg-blue-600 transition disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            Log in
+            {isSubmitting || isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                {isSubmitting ? 'Logging in...' : 'Loading...'}
+              </>
+            ) : (
+              'Log in'
+            )}
           </button>
 
           {/* Powered by Section */}

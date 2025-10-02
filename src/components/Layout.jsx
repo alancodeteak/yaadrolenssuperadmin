@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { useAppDispatch } from '../store/hooks'
+import { logout } from '../store/slices/authSlice'
 import Header from './Header'
 import Sidebar from './Sidebar'
 
-export default function Layout({ children, onLogout }) {
+export default function Layout({ children }) {
+  const dispatch = useAppDispatch()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const navigate = useNavigate()
   const location = useLocation()
 
   const toggleSidebar = () => {
@@ -13,9 +15,7 @@ export default function Layout({ children, onLogout }) {
   }
 
   const handleLogout = () => {
-    if (onLogout) {
-      onLogout()
-    }
+    dispatch(logout())
   }
 
   return (

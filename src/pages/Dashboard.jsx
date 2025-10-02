@@ -1,46 +1,29 @@
-import { useState, useEffect } from 'react'
 import { Building2, Users, Clock, TrendingUp, RefreshCw } from 'lucide-react'
+import { toast } from 'react-toastify'
+import { useAppDispatch, useAppSelector } from '../store/hooks'
+import { refreshDashboard, refreshComplete } from '../store/slices/dashboardSlice'
+import LoadingSpinner from '../components/common/LoadingSpinner'
+import ApiTest from '../components/common/ApiTest'
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({
-    totalCompanies: 0,
-    totalEmployees: 0,
-    totalAttendance: 0,
-    attendanceRate: 0
-  })
-
-  const [isLoading, setIsLoading] = useState(false)  // Set to false to show content immediately
-
-  useEffect(() => {
-    // Simulate API call - immediate data load for testing  
-    setStats({
-      totalCompanies: 24,
-      totalEmployees: 1247,
-      totalAttendance: 1156,
-      attendanceRate: 92.7
-    })
-  }, [])
+  const dispatch = useAppDispatch()
+  const { stats, activities, isLoading } = useAppSelector(state => state.dashboard)
 
   const handleRefresh = () => {
-    setIsLoading(true)
+    dispatch(refreshDashboard())
     setTimeout(() => {
-      setStats({
-        totalCompanies: 24,
-        totalEmployees: 1247,
-        totalAttendance: 1156,
-        attendanceRate: 92.7
-      })
-      setIsLoading(false)
+      dispatch(refreshComplete())
+      toast.success('Dashboard data refreshed')
     }, 1000)
   }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="flex items-center space-x-2 text-gray-500">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Loading dashboard...</span>
-        </div>
+        <LoadingSpinner 
+          text="Loading dashboard..." 
+          size="default"
+        />
       </div>
     )
   }
@@ -123,22 +106,24 @@ export default function Dashboard() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
           <div className="space-y-3">
-            {[
-              { action: 'New company registered', time: '2 minutes ago', icon: Building2 },
-              { action: 'Attendance recorded', time: '5 minutes ago', icon: Clock },
-              { action: 'Report generated', time: '1 hour ago', icon: TrendingUp },
-              { action: 'User login', time: '2 hours ago', icon: Users }
-            ].map((activity, index) => (
-              <div key={index} className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                  <activity.icon className="w-4 h-4 text-gray-600" />
+            {activities.map((activity, index) => {
+              const IconComponent = activity.icon === 'Building2' ? Building2 :
+                                   activity.icon === 'Clock' ? Clock :
+                                   activity.icon === 'TrendingUp' ? TrendingUp :
+                                   activity.icon === 'Users' ? Users : Building2
+              
+              return (
+                <div key={index} className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                    <IconComponent className="w-4 h-4 text-gray-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                    <p className="text-xs text-gray-500">{activity.time}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
@@ -165,6 +150,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* API Test Tool - Remove this after debugging */}
+      <ApiTest />
     </div>
   )
 }

@@ -5,7 +5,8 @@ import {
   Clock, 
   BarChart3, 
   Settings, 
-  FileText 
+  FileText,
+  Building
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -15,6 +16,7 @@ export default function Sidebar({ isOpen, currentPath }) {
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: Home, path: '/' },
     { id: 'companies', name: 'Companies', icon: Building2, path: '/companies' },
+    { id: 'departments', name: 'Departments', icon: Building, path: '/departments' },
     { id: 'employees', name: 'Employees', icon: Users, path: '/employees' },
     { id: 'attendance', name: 'Attendance', icon: Clock, path: '/attendance' },
     { id: 'reports', name: 'Reports', icon: BarChart3, path: '/reports' },

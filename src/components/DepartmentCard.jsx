@@ -1,10 +1,10 @@
 import EntityCard from './common/EntityCard'
 
-export default function CompanyCard({ company, onView, onEdit, onDelete }) {
+export default function DepartmentCard({ department, onView, onEdit, onDelete }) {
   return (
     <EntityCard
-      entity={company}
-      type="company"
+      entity={department}
+      type="department"
       onView={onView}
       onEdit={onEdit}
       onDelete={onDelete}
