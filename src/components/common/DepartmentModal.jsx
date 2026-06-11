@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { toast } from 'react-toastify'
-import { DollarSign } from 'lucide-react'
+import { Layers } from 'lucide-react'
+import { dashboardToast } from '../../utils/dashboardToast'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { 
   createDepartment, 
@@ -15,7 +15,7 @@ import FormInput from './FormInput'
 import FormButton from './FormButton'
 import ErrorAlert from './ErrorAlert'
 
-export default function DepartmentModal() {
+export default function DepartmentModal({ orgId }) {
   const dispatch = useAppDispatch()
   const { 
     createDepartmentModalOpen,
@@ -34,8 +34,7 @@ export default function DepartmentModal() {
 
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    budget: ''
+    description: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -45,14 +44,12 @@ export default function DepartmentModal() {
     if (isEdit && editingDepartment) {
       setFormData({
         name: editingDepartment.name || '',
-        description: editingDepartment.description || '',
-        budget: editingDepartment.budget ? parseFloat(editingDepartment.budget).toFixed(2) : ''
+        description: editingDepartment.description || ''
       })
     } else {
       setFormData({
         name: '',
-        description: '',
-        budget: ''
+        description: ''
       })
     }
     setErrors({})
@@ -93,17 +90,6 @@ export default function DepartmentModal() {
       newErrors.description = 'Description must be at least 10 characters'
     }
 
-    if (!formData.budget) {
-      newErrors.budget = 'Budget is required'
-    } else {
-      const budgetValue = parseFloat(formData.budget)
-      if (isNaN(budgetValue) || budgetValue <= 0) {
-        newErrors.budget = 'Budget must be a positive number'
-      } else if (budgetValue > 10000000) {
-        newErrors.budget = 'Budget cannot exceed $10,000,000'
-      }
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -120,29 +106,37 @@ export default function DepartmentModal() {
       
       if (isEdit) {
         result = await dispatch(updateDepartment({
+          orgId,
           departmentId: editingDepartment.id,
           departmentData: {
             name: formData.name.trim(),
-            description: formData.description.trim(),
-            budget: parseFloat(formData.budget)
+            description: formData.description.trim()
           }
         }))
       } else {
         result = await dispatch(createDepartment({
-          name: formData.name.trim(),
-          description: formData.description.trim(),
-          budget: parseFloat(formData.budget)
+          orgId,
+          departmentData: {
+            name: formData.name.trim(),
+            description: formData.description.trim()
+          }
         }))
       }
 
       if ((isEdit ? updateDepartment : createDepartment).fulfilled.match(result)) {
-        toast.success(`Department ${isEdit ? 'updated' : 'created'} successfully!`)
+        dashboardToast.success(
+          `Department ${isEdit ? 'updated' : 'created'} successfully.`,
+          isEdit ? 'Department updated' : 'Department created'
+        )
       } else {
-        toast.error(result.payload || `Failed to ${isEdit ? 'update' : 'create'} department`)
+        dashboardToast.error(
+          result.payload || `Failed to ${isEdit ? 'update' : 'create'} department`,
+          'Request failed'
+        )
       }
     } catch (error) {
       console.error(`${isEdit ? 'Update' : 'Create'} department error:`, error)
-      toast.error('An unexpected error occurred')
+      dashboardToast.error('An unexpected error occurred', 'Request failed')
     }
   }
 
@@ -164,7 +158,19 @@ export default function DepartmentModal() {
       isOpen={isOpen}
       onClose={handleClose}
       title={isEdit ? 'Edit Department' : 'Create Department'}
+      subtitle={isEdit ? 'Update department details' : 'Add a department to this organization'}
+      icon={Layers}
       size="sm"
+      footer={
+        <div className="flex items-center justify-end gap-3">
+          <FormButton type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
+            Cancel
+          </FormButton>
+          <FormButton type="submit" form="department-modal-form" loading={isLoading} disabled={isLoading}>
+            {isEdit ? 'Update Department' : 'Create Department'}
+          </FormButton>
+        </div>
+      }
     >
       <div className="space-y-4">
         {error && (
@@ -175,7 +181,7 @@ export default function DepartmentModal() {
           />
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="department-modal-form" onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-3">
             <FormInput
               label="Department Name"
@@ -196,53 +202,8 @@ export default function DepartmentModal() {
               error={errors.description}
               required
             />
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Annual Budget <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <DollarSign className="h-4 w-4 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  value={formData.budget}
-                  onChange={handleInputChange('budget')}
-                  placeholder="500000.00"
-                  className={`w-full pl-9 pr-3 py-2 border ${
-                    errors.budget ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-                  } rounded-md shadow-sm focus:outline-none focus:ring-1 focus:border-blue-500`}
-                  disabled={isLoading}
-                />
-              </div>
-              {errors.budget && (
-                <p className="mt-1 text-sm text-red-600">{errors.budget}</p>
-              )}
-            </div>
           </div>
 
-          {/* Form Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-100">
-            <FormButton
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isLoading}
-            >
-              Cancel
-            </FormButton>
-            <FormButton
-              type="submit"
-              loading={isLoading}
-              disabled={isLoading}
-            >
-              {isLoading 
-                ? (isEdit ? 'Updating Department...' : 'Creating Department...') 
-                : (isEdit ? 'Update Department' : 'Create Department')
-              }
-            </FormButton>
-          </div>
         </form>
       </div>
     </MinimalModal>

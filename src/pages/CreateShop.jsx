@@ -1,25 +1,24 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAppDispatch } from '../store/hooks'
-import { openCreateModal } from '../store/slices/companiesSlice'
-import LoadingSpinner from '../components/common/LoadingSpinner'
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch } from '../store/hooks';
+import { openCreateModal } from '../store/slices/companiesSlice';
+import PageShell from '../components/common/PageShell';
+import { LottieLoader } from '../components/common/Lottie';
 
 export default function CreateShop() {
-  const navigate = useNavigate()
-  const dispatch = useAppDispatch()
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    // Open the create modal and redirect to companies page
-    dispatch(openCreateModal())
-    navigate('/companies')
-  }, [dispatch, navigate])
+    dispatch(openCreateModal());
+    navigate('/companies');
+  }, [dispatch, navigate]);
 
   return (
-    <div className="flex items-center justify-center min-h-96">
-      <LoadingSpinner 
-        text="Redirecting to create shop..." 
-        size="default"
-      />
-    </div>
-  )
+    <PageShell>
+      <div className="flex min-h-96 items-center justify-center">
+        <LottieLoader size="lg" label="Opening create organization…" centered />
+      </div>
+    </PageShell>
+  );
 }

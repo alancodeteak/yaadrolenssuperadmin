@@ -1,185 +1,172 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import { Building2, RefreshCw, AlertCircle, Plus } from 'lucide-react'
-import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { fetchDepartments, clearDepartmentsError, openCreateDepartmentModal, openEditDepartmentModal, openDeleteDepartmentModal } from '../store/slices/companiesSlice'
-import DepartmentCard from '../components/DepartmentCard'
-import DepartmentModal from '../components/common/DepartmentModal'
-import DeleteDepartmentModal from '../components/department/DeleteDepartmentModal'
-import LoadingSpinner from '../components/common/LoadingSpinner'
-import ErrorAlert from '../components/common/ErrorAlert'
-import SearchAndFilter from '../components/common/SearchAndFilter'
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Building2, RefreshCw, AlertCircle, Plus } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  fetchDepartments,
+  fetchShopDetails,
+  clearDepartmentsError,
+  openCreateDepartmentModal,
+  openEditDepartmentModal,
+  openDeleteDepartmentModal,
+} from '../store/slices/companiesSlice';
+import DepartmentCard from '../components/DepartmentCard';
+import DepartmentModal from '../components/common/DepartmentModal';
+import DeleteDepartmentModal from '../components/department/DeleteDepartmentModal';
+import { LottieLoader } from '../components/common/Lottie';
+import ErrorAlert from '../components/common/ErrorAlert';
+import SearchAndFilter from '../components/common/SearchAndFilter';
+import PageHeader from '../components/common/PageHeader';
+import PageShell from '../components/common/PageShell';
+import { dashboardToast } from '../utils/dashboardToast';
+import { DASHBOARD_BTN_PRIMARY, DASHBOARD_BTN_SECONDARY, DASHBOARD_PANEL } from '../theme/dashboardTheme';
 
 export default function Departments() {
-  const navigate = useNavigate()
-  const dispatch = useAppDispatch()
-  const { 
-    departments, 
-    isLoadingDepartments, 
-    departmentsError 
-  } = useAppSelector(state => state.companies)
+  const { orgId } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const {
+    departments,
+    isLoadingDepartments,
+    departmentsError,
+    shopDetails,
+  } = useAppSelector((state) => state.companies);
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterActive, setFilterActive] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterActive, setFilterActive] = useState('all');
 
   useEffect(() => {
-    // Fetch departments when component mounts
-    dispatch(fetchDepartments(true)) // Fetch only active departments by default
-  }, [dispatch])
+    if (orgId) {
+      dispatch(fetchShopDetails(orgId));
+      dispatch(fetchDepartments({ orgId, activeOnly: filterActive === 'active' }));
+    }
+  }, [dispatch, orgId, filterActive]);
 
   const handleViewDepartment = (department) => {
-    navigate(`/departments/${department.id}`)
-  }
-
-  const handleEditDepartment = (department) => {
-    dispatch(openEditDepartmentModal(department))
-  }
-
-  const handleDeleteDepartment = (department) => {
-    dispatch(openDeleteDepartmentModal(department))
-  }
+    navigate(`/organizations/${orgId}/departments/${department.id}`);
+  };
 
   const handleRefresh = () => {
-    dispatch(fetchDepartments(filterActive === 'active'))
-    toast.success('Departments refreshed')
-  }
-
-  const handleAddDepartment = () => {
-    dispatch(openCreateDepartmentModal())
-  }
-
-  const handleFilterChange = (filter) => {
-    setFilterActive(filter)
-    // Fetch departments based on filter
-    if (filter === 'all') {
-      dispatch(fetchDepartments(false)) // Fetch all departments
-    } else {
-      dispatch(fetchDepartments(true)) // Fetch only active departments
+    if (orgId) {
+      dispatch(fetchDepartments({ orgId, activeOnly: filterActive === 'active' }));
+      dashboardToast.success('Departments refreshed.', 'Refreshed');
     }
-  }
+  };
 
-  // Filter departments based on search query and active status
-  const filteredDepartments = departments.filter(dept => {
-    const matchesSearch = dept.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dept.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dept.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dept.manager_name?.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesFilter = filterActive === 'all' || 
-                         (filterActive === 'active' ? dept.is_active : !dept.is_active)
-    
-    return matchesSearch && matchesFilter
-  })
+  const filteredDepartments = departments.filter((dept) => {
+    const matchesSearch =
+      dept.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dept.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter =
+      filterActive === 'all' ||
+      (filterActive === 'active' ? dept.is_active : !dept.is_active);
+    return matchesSearch && matchesFilter;
+  });
+
+  const backPath = `/organizations/${orgId}`;
+  const orgName = shopDetails?.name || 'Organization';
 
   if (isLoadingDepartments && departments.length === 0) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Departments</h1>
-            <p className="text-gray-600">Manage department information and settings</p>
-          </div>
+      <PageShell className="space-y-6">
+        <PageHeader title="Departments" showBackButton backButtonPath={backPath} />
+        <div className="flex min-h-96 items-center justify-center">
+          <LottieLoader size="lg" label="Loading departments..." centered />
         </div>
-        <div className="flex items-center justify-center min-h-96">
-          <LoadingSpinner message="Loading departments..." />
-        </div>
-      </div>
-    )
+      </PageShell>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Departments</h1>
-          <p className="text-gray-600">Manage department information and settings</p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <button 
-            onClick={handleRefresh}
-            disabled={isLoadingDepartments}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:bg-gray-300"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoadingDepartments ? 'animate-spin' : ''}`} />
-            <span>{isLoadingDepartments ? 'Refreshing...' : 'Refresh'}</span>
-          </button>
-          <button 
-            onClick={handleAddDepartment}
-            className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Department</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <SearchAndFilter
-        searchQuery={searchQuery}
-        onSearchChange={(e) => setSearchQuery(e.target.value)}
-        searchPlaceholder="Search departments..."
-        filterValue={filterActive}
-        onFilterChange={(e) => handleFilterChange(e.target.value)}
-        filterOptions={[
-          { value: 'all', label: 'All Departments' },
-          { value: 'active', label: 'Active Only' },
-          { value: 'inactive', label: 'Inactive Only' }
-        ]}
-        focusColor="focus:ring-purple-500"
+    <PageShell className="space-y-6">
+      <PageHeader
+        title="Departments"
+        subtitle={`${orgName} — manage departments for this organization`}
+        showBackButton
+        backButtonPath={backPath}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isLoadingDepartments}
+              className={DASHBOARD_BTN_SECONDARY}
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoadingDepartments ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button
+              type="button"
+              onClick={() => dispatch(openCreateDepartmentModal())}
+              className={DASHBOARD_BTN_PRIMARY}
+            >
+              <Plus className="h-4 w-4" />
+              Add department
+            </button>
+          </>
+        }
       />
 
-      {/* Results Count and Error Message */}
+      <div className={`${DASHBOARD_PANEL} p-4 sm:p-5`}>
+        <SearchAndFilter
+          searchQuery={searchQuery}
+          onSearchChange={(e) => setSearchQuery(e.target.value)}
+          searchPlaceholder="Search departments..."
+          filterValue={filterActive}
+          onFilterChange={(e) => setFilterActive(e.target.value)}
+          filterOptions={[
+            { value: 'all', label: 'All departments' },
+            { value: 'active', label: 'Active only' },
+            { value: 'inactive', label: 'Inactive only' },
+          ]}
+        />
+      </div>
+
       <div className="flex items-center justify-between">
-        <p className="text-gray-600">
+        <p className="text-sm text-gray-500">
           Showing {filteredDepartments.length} of {departments.length} departments
         </p>
         {departmentsError && (
-          <div className="flex items-center space-x-2 text-amber-600">
-            <AlertCircle className="w-4 h-4" />
-            <span className="text-sm">Showing cached data - API connection failed</span>
+          <div className="flex items-center gap-2 text-[#FF9500]">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">Could not load departments</span>
           </div>
         )}
       </div>
 
-      {/* Error Alert */}
       {departmentsError && (
-        <ErrorAlert
-          message={departmentsError}
-          onClose={() => dispatch(clearDepartmentsError())}
-        />
+        <ErrorAlert message={departmentsError} onDismiss={() => dispatch(clearDepartmentsError())} />
       )}
 
-      {/* Departments Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDepartments.map(department => (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {filteredDepartments.map((department) => (
           <DepartmentCard
             key={department.id}
-            department={department}
+            department={{
+              ...department,
+              employees_count: department.employee_count,
+            }}
             onView={handleViewDepartment}
-            onEdit={handleEditDepartment}
-            onDelete={handleDeleteDepartment}
+            onEdit={(dept) => dispatch(openEditDepartmentModal(dept))}
+            onDelete={(dept) => dispatch(openDeleteDepartmentModal(dept))}
           />
         ))}
       </div>
 
-      {/* Empty State */}
       {filteredDepartments.length === 0 && !isLoadingDepartments && (
-        <div className="text-center py-12">
-          <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No departments found</h3>
-          <p className="text-gray-600">
-            {searchQuery ? 'Try adjusting your search criteria.' : 'Add your first department to get started.'}
+        <div className={`${DASHBOARD_PANEL} py-12 text-center`}>
+          <Building2 className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+          <h3 className="text-sm font-semibold text-gray-900">No departments found</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {searchQuery
+              ? 'Try adjusting your search.'
+              : 'Add departments so org admins can assign employees.'}
           </p>
         </div>
       )}
-      
-      {/* Department Modal (Create/Edit) */}
-      <DepartmentModal />
-      
-      {/* Delete Department Modal */}
-      <DeleteDepartmentModal />
-    </div>
-  )
+
+      <DepartmentModal orgId={orgId} />
+      <DeleteDepartmentModal orgId={orgId} />
+    </PageShell>
+  );
 }

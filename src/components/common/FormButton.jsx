@@ -1,43 +1,36 @@
-import { Loader2 } from 'lucide-react'
+import clsx from 'clsx';
+import ButtonSpinner from './ButtonSpinner/ButtonSpinner';
+import {
+  DASHBOARD_BTN_DESTRUCTIVE,
+  DASHBOARD_BTN_PRIMARY,
+  DASHBOARD_BTN_SECONDARY,
+} from '../../theme/dashboardTheme';
 
 export default function FormButton({
   type = 'button',
   variant = 'primary',
-  size = 'default',
   loading = false,
   disabled = false,
   onClick,
   children,
-  className = ''
+  className = '',
 }) {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2'
-  
   const variantClasses = {
-    primary: 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500 disabled:bg-blue-300',
-    secondary: 'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-500 disabled:bg-gray-300',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500 disabled:bg-gray-100',
-    danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500 disabled:bg-red-300'
-  }
-  
-  const sizeClasses = {
-    small: 'px-3 py-2 text-sm',
-    default: 'px-4 py-2 text-sm',
-    large: 'px-6 py-3 text-base'
-  }
-
-  const combinedClasses = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`
+    primary: DASHBOARD_BTN_PRIMARY,
+    secondary: DASHBOARD_BTN_SECONDARY,
+    outline: DASHBOARD_BTN_SECONDARY,
+    danger: DASHBOARD_BTN_DESTRUCTIVE,
+  };
 
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={combinedClasses}
+      className={clsx(variantClasses[variant] || DASHBOARD_BTN_PRIMARY, className)}
     >
-      {loading && (
-        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-      )}
+      {loading && <ButtonSpinner size="sm" className={variant === 'outline' ? 'text-gray-600' : 'text-white'} />}
       {children}
     </button>
-  )
+  );
 }

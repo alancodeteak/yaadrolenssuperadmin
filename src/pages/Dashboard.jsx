@@ -1,154 +1,148 @@
-import { Building2, Users, Clock, TrendingUp, RefreshCw } from 'lucide-react'
-import { toast } from 'react-toastify'
-import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { refreshDashboard, refreshComplete } from '../store/slices/dashboardSlice'
-import LoadingSpinner from '../components/common/LoadingSpinner'
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Building2, Users, RefreshCw, AlertCircle } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchPlatformStats } from '../store/slices/dashboardSlice';
+import { openCreateModal } from '../store/slices/companiesSlice';
+import { DashboardWidgetCard } from '../components/pages/dashboard';
+import PageShell from '../components/common/PageShell';
+import { LottieLoader } from '../components/common/Lottie';
+import { dashboardToast } from '../utils/dashboardToast';
+import { DASHBOARD_ACCENTS, DASHBOARD_BTN_SECONDARY, DASHBOARD_PANEL } from '../theme/dashboardTheme';
 
 export default function Dashboard() {
-  const dispatch = useAppDispatch()
-  const { stats, activities, isLoading } = useAppSelector(state => state.dashboard)
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { stats, isLoading, error } = useAppSelector((state) => state.dashboard);
 
-  const handleRefresh = () => {
-    dispatch(refreshDashboard())
-    setTimeout(() => {
-      dispatch(refreshComplete())
-      toast.success('Dashboard data refreshed')
-    }, 1000)
-  }
+  useEffect(() => {
+    dispatch(fetchPlatformStats());
+  }, [dispatch]);
 
-  if (isLoading) {
+  const handleRefresh = async () => {
+    const result = await dispatch(fetchPlatformStats());
+    if (fetchPlatformStats.fulfilled.match(result)) {
+      dashboardToast.success('Dashboard data is up to date.', 'Refreshed');
+    }
+  };
+
+  if (isLoading && stats.totalCompanies === 0 && !error) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <LoadingSpinner 
-          text="Loading dashboard..." 
-          size="default"
-        />
-      </div>
-    )
+      <PageShell>
+        <div className="flex min-h-96 items-center justify-center">
+          <LottieLoader size="lg" label="Loading dashboard..." centered />
+        </div>
+      </PageShell>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <PageShell className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Attendance management overview</p>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">Platform overview across all organizations</p>
         </div>
         <button
+          type="button"
           onClick={handleRefresh}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          disabled={isLoading}
+          className={DASHBOARD_BTN_SECONDARY}
         >
-          <RefreshCw className="w-4 h-4" />
-          <span>Refresh</span>
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Total Companies */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Companies</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalCompanies}</p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl border border-red-200/60 bg-red-50 px-4 py-3 text-red-700">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span className="text-sm">{error}</span>
         </div>
+      )}
 
-        {/* Total Employees */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Employees</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalEmployees.toLocaleString()}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Today's Attendance */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Present Today</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalAttendance}</p>
-            </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-6 h-6 text-orange-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Attendance Rate */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Attendance Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.attendanceRate}%</p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <DashboardWidgetCard
+          title="Organizations"
+          href="/companies"
+          loading={isLoading}
+          stats={[
+            { label: 'Total', value: String(stats.totalCompanies), accent: DASHBOARD_ACCENTS.blue },
+            {
+              label: 'Active',
+              value: String(stats.activeOrganizations),
+              accent: DASHBOARD_ACCENTS.green,
+            },
+          ]}
+        />
+        <DashboardWidgetCard
+          title="Workforce"
+          loading={isLoading}
+          stats={[
+            {
+              label: 'Total employees',
+              value: stats.totalEmployees.toLocaleString(),
+              accent: DASHBOARD_ACCENTS.purple,
+            },
+            {
+              label: 'Attendance today',
+              value: String(stats.totalAttendance),
+              accent: DASHBOARD_ACCENTS.orange,
+            },
+          ]}
+        />
+        <DashboardWidgetCard
+          title="Attendance"
+          loading={isLoading}
+          stats={[
+            {
+              label: 'Rate today',
+              value: `${stats.attendanceRate}%`,
+              accent: DASHBOARD_ACCENTS.green,
+            },
+            {
+              label: 'Check-ins',
+              value: String(stats.totalAttendance),
+              accent: DASHBOARD_ACCENTS.gray,
+            },
+          ]}
+        />
       </div>
 
-      {/* Additional Content Areas */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activities */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
-          <div className="space-y-3">
-            {activities.map((activity, index) => {
-              const IconComponent = activity.icon === 'Building2' ? Building2 :
-                                   activity.icon === 'Clock' ? Clock :
-                                   activity.icon === 'TrendingUp' ? TrendingUp :
-                                   activity.icon === 'Users' ? Users : Building2
-              
-              return (
-                <div key={index} className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <IconComponent className="w-4 h-4 text-gray-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                    <p className="text-xs text-gray-500">{activity.time}</p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { name: 'Add Company', icon: Building2, color: 'bg-blue-500' },
-              { name: 'View Reports', icon: TrendingUp, color: 'bg-green-500' },
-              { name: 'Manage Users', icon: Users, color: 'bg-purple-500' },
-              { name: 'Settings', icon: Clock, color: 'bg-orange-500' }
-            ].map((action, index) => (
-              <button
-                key={index}
-                className="flex flex-col items-center space-y-2 p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <div className={`w-10 h-10 ${action.color} rounded-lg flex items-center justify-center`}>
-                  <action.icon className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-sm font-medium text-gray-700">{action.name}</span>
-              </button>
-            ))}
-          </div>
+      <div className={`${DASHBOARD_PANEL} p-4 sm:p-5`}>
+        <h3 className="mb-4 text-sm font-semibold text-gray-900">Quick actions</h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => {
+              dispatch(openCreateModal());
+              navigate('/companies');
+            }}
+            className="flex items-center gap-3 rounded-xl border border-gray-200/60 p-4 text-left transition-colors hover:bg-gray-50"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#007AFF]/10 text-[#007AFF]">
+              <Building2 className="h-5 w-5" strokeWidth={2} />
+            </span>
+            <div>
+              <span className="block text-sm font-medium text-gray-900">Add organization</span>
+              <span className="text-xs text-gray-500">Create a new tenant with an org admin</span>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/companies')}
+            className="flex items-center gap-3 rounded-xl border border-gray-200/60 p-4 text-left transition-colors hover:bg-gray-50"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#34C759]/10 text-[#34C759]">
+              <Users className="h-5 w-5" strokeWidth={2} />
+            </span>
+            <div>
+              <span className="block text-sm font-medium text-gray-900">Manage organizations</span>
+              <span className="text-xs text-gray-500">View, edit, or disable tenants</span>
+            </div>
+          </button>
         </div>
       </div>
-    </div>
-  )
+    </PageShell>
+  );
 }

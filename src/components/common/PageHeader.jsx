@@ -1,45 +1,53 @@
-import { ArrowLeft } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import clsx from 'clsx';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export default function PageHeader({ 
-  title, 
-  subtitle, 
+export default function PageHeader({
+  title,
+  subtitle,
   showBackButton = false,
   backButtonText = 'Back',
   backButtonPath = '/companies',
+  onBack,
   actions = null,
-  className = '' 
+  className = '',
 }) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate(backButtonPath)
-  }
+    if (onBack) {
+      onBack();
+    } else {
+      navigate(backButtonPath);
+    }
+  };
 
   return (
-    <div className={`flex items-center justify-between ${className}`}>
-      <div className="flex items-center space-x-4">
+    <div
+      className={clsx(
+        'flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between',
+        className
+      )}
+    >
+      <div className="flex min-w-0 items-start gap-3">
         {showBackButton && (
           <button
+            type="button"
             onClick={handleBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="mt-1 flex shrink-0 items-center gap-1.5 rounded-xl border border-gray-200/60 px-2.5 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">{backButtonText}</span>
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">{backButtonText}</span>
           </button>
         )}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-          {subtitle && (
-            <p className="text-gray-600">{subtitle}</p>
-          )}
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+          {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
         </div>
       </div>
       {actions && (
-        <div className="flex items-center space-x-3">
-          {actions}
-        </div>
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">{actions}</div>
       )}
     </div>
-  )
+  );
 }

@@ -1,20 +1,14 @@
-export default function ChartCard({ 
-  title, 
-  subtitle, 
-  children, 
-  className = '' 
-}) {
+import clsx from 'clsx';
+import { DASHBOARD_PANEL } from '../../theme/dashboardTheme';
+
+export default function ChartCard({ title, subtitle, children, className = '' }) {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 ${className}`}>
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        {subtitle && (
-          <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
-        )}
+    <div className={clsx(DASHBOARD_PANEL, 'overflow-hidden', className)}>
+      <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
+        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-[11px] text-gray-500">{subtitle}</p>}
       </div>
-      <div className="p-6">
-        {children}
-      </div>
+      <div className="p-4 sm:p-5">{children}</div>
     </div>
-  )
+  );
 }

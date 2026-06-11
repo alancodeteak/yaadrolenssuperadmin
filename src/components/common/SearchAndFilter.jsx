@@ -1,50 +1,45 @@
-import { Search, Filter } from 'lucide-react'
+import { Search, Filter } from 'lucide-react';
+import { inputClass } from '../../theme/dashboardTheme';
+import clsx from 'clsx';
 
 export default function SearchAndFilter({
   searchQuery,
   onSearchChange,
-  searchPlaceholder = "Search...",
+  searchPlaceholder = 'Search...',
   filterValue,
   onFilterChange,
   filterOptions = [
     { value: 'all', label: 'All' },
     { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' }
+    { value: 'inactive', label: 'Inactive' },
   ],
-  filterLabel = "Status",
-  focusColor = "focus:ring-blue-500"
+  className = '',
 }) {
-  return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-      <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
-        {/* Search */}
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder={searchPlaceholder}
-            value={searchQuery}
-            onChange={onSearchChange}
-            className={`w-full pl-9 pr-4 py-2 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 ${focusColor}`}
-          />
-        </div>
+  const selectClass = clsx(inputClass, 'py-2 pr-8');
 
-        {/* Filter */}
-        <div className="flex items-center space-x-2">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <select
-            value={filterValue}
-            onChange={onFilterChange}
-            className={`px-3 py-2 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 ${focusColor}`}
-          >
-            {filterOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+  return (
+    <div className={clsx('flex flex-col gap-3 md:flex-row md:items-center', className)}>
+      <div className="relative flex-1">
+        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder={searchPlaceholder}
+          value={searchQuery}
+          onChange={onSearchChange}
+          className={clsx(inputClass, 'pl-10')}
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Filter className="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+        <select value={filterValue} onChange={onFilterChange} className={selectClass}>
+          {filterOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
-  )
+  );
 }

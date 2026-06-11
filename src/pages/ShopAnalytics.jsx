@@ -1,174 +1,134 @@
-import { useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { fetchShopAnalytics, clearAnalyticsError } from '../store/slices/companiesSlice'
-import LoadingSpinner from '../components/common/LoadingSpinner'
-import ErrorAlert from '../components/common/ErrorAlert'
-import PageHeader from '../components/common/PageHeader'
-import ChartCard from '../components/charts/ChartCard'
-import EmployeeStatusPieChart from '../components/charts/EmployeeStatusPieChart'
-import AnalyticsOverviewChart from '../components/charts/AnalyticsOverviewChart'
-import DemoAnalyticsBarChart from '../components/charts/DemoAnalyticsBarChart'
-import InfoCard from '../components/common/InfoCard'
-import { 
-  RefreshCw, 
-  Users, 
-  UserCheck, 
-  TrendingUp, 
-  Calendar,
-  BarChart3,
-  PieChart,
-  LineChart
-} from 'lucide-react'
+import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchShopAnalytics, clearAnalyticsError } from '../store/slices/companiesSlice';
+import { LottieLoader } from '../components/common/Lottie';
+import ErrorAlert from '../components/common/ErrorAlert';
+import PageHeader from '../components/common/PageHeader';
+import PageShell from '../components/common/PageShell';
+import ChartCard from '../components/charts/ChartCard';
+import EmployeeStatusPieChart from '../components/charts/EmployeeStatusPieChart';
+import AnalyticsOverviewChart from '../components/charts/AnalyticsOverviewChart';
+import DemoAnalyticsBarChart from '../components/charts/DemoAnalyticsBarChart';
+import InfoCard from '../components/common/InfoCard';
+import { dashboardToast } from '../utils/dashboardToast';
+import { DASHBOARD_ACCENTS, DASHBOARD_BTN_SECONDARY, DASHBOARD_PANEL } from '../theme/dashboardTheme';
+import { RefreshCw, Users, UserCheck, TrendingUp, Calendar, BarChart3 } from 'lucide-react';
 
 export default function ShopAnalytics() {
-  const { shopId } = useParams()
-  const dispatch = useAppDispatch()
-  const { 
-    shopAnalytics, 
-    isLoadingAnalytics, 
-    analyticsError 
-  } = useAppSelector(state => state.companies)
+  const { orgId } = useParams();
+  const dispatch = useAppDispatch();
+  const { shopAnalytics, isLoadingAnalytics, analyticsError } = useAppSelector(
+    (state) => state.companies
+  );
 
   useEffect(() => {
-    if (shopId) {
-      dispatch(fetchShopAnalytics(shopId))
+    if (orgId) {
+      dispatch(fetchShopAnalytics(orgId));
     }
-  }, [dispatch, shopId])
+  }, [dispatch, orgId]);
 
   const handleRefresh = () => {
-    if (shopId) {
-      dispatch(fetchShopAnalytics(shopId))
-      toast.success('Analytics data refreshed')
+    if (orgId) {
+      dispatch(fetchShopAnalytics(orgId));
+      dashboardToast.success('Analytics data refreshed.', 'Refreshed');
     }
-  }
+  };
+
+  const backPath = `/organizations/${orgId}`;
 
   if (isLoadingAnalytics && !shopAnalytics) {
     return (
-      <div className="space-y-6">
-        <PageHeader 
-          title="Loading Analytics..."
-          showBackButton={true}
-          backButtonText="Back to Shop"
-          backButtonPath={`/shops/${shopId}`}
+      <PageShell className="space-y-6">
+        <PageHeader
+          title="Loading analytics…"
+          showBackButton
+          backButtonText="Back to organization"
+          backButtonPath={backPath}
         />
-        <div className="flex items-center justify-center min-h-96">
-          <LoadingSpinner size="large" text="Loading analytics data..." />
+        <div className="flex min-h-96 items-center justify-center">
+          <LottieLoader size="lg" label="Loading analytics data..." centered />
         </div>
-      </div>
-    )
+      </PageShell>
+    );
   }
 
   if (analyticsError && !shopAnalytics) {
     return (
-      <div className="space-y-6">
-        <PageHeader 
-          title="Analytics Error"
+      <PageShell className="space-y-6">
+        <PageHeader
+          title="Analytics error"
           subtitle="Failed to load analytics data"
-          showBackButton={true}
-          backButtonText="Back to Shop"
-          backButtonPath={`/shops/${shopId}`}
+          showBackButton
+          backButtonText="Back to organization"
+          backButtonPath={backPath}
         />
-        <ErrorAlert 
-          message={analyticsError}
-          type="error"
-        />
-      </div>
-    )
+        <ErrorAlert message={analyticsError} type="error" />
+      </PageShell>
+    );
   }
 
   if (!shopAnalytics) {
     return (
-      <div className="space-y-6">
-        <PageHeader 
-          title="Analytics Not Found"
-          subtitle="No analytics data available for this shop"
-          showBackButton={true}
-          backButtonText="Back to Shop"
-          backButtonPath={`/shops/${shopId}`}
+      <PageShell className="space-y-6">
+        <PageHeader
+          title="Analytics not found"
+          subtitle="No analytics data available"
+          showBackButton
+          backButtonText="Back to organization"
+          backButtonPath={backPath}
         />
-        <ErrorAlert 
-          message="No analytics data found for this shop. Please check the shop ID and try again."
+        <ErrorAlert
+          message="No analytics data found for this organization."
           type="error"
         />
-      </div>
-    )
+      </PageShell>
+    );
   }
 
-  const { shop, total_employees, active_employees, analytics, period_days } = shopAnalytics
-  const inactiveEmployees = total_employees - active_employees
-  const attendanceRate = total_employees > 0 ? ((active_employees / total_employees) * 100).toFixed(1) : 0
-
-  const actions = (
-    <button
-      onClick={handleRefresh}
-      disabled={isLoadingAnalytics}
-      className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-blue-300"
-    >
-      <RefreshCw className={`w-4 h-4 ${isLoadingAnalytics ? 'animate-spin' : ''}`} />
-      <span>Refresh</span>
-    </button>
-  )
+  const { shop, total_employees, active_employees, analytics, period_days } = shopAnalytics;
+  const inactiveEmployees = total_employees - active_employees;
+  const attendanceRate =
+    total_employees > 0 ? ((active_employees / total_employees) * 100).toFixed(1) : 0;
 
   return (
-    <div className="space-y-6">
-      <PageHeader 
-        title={`${shop.name} Analytics`}
-        subtitle={`Shop Code: ${shop.shop_code} • Last ${period_days} days`}
-        showBackButton={true}
-        backButtonText="Back to Shop"
-        backButtonPath={`/shops/${shopId}`}
-        actions={actions}
+    <PageShell className="space-y-6">
+      <PageHeader
+        title={`${shop.name} stats`}
+        subtitle={`Code: ${shop.shop_code || shop.code} · Employee overview`}
+        showBackButton
+        backButtonText="Back to organization"
+        backButtonPath={backPath}
+        actions={
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={isLoadingAnalytics}
+            className={DASHBOARD_BTN_SECONDARY}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoadingAnalytics ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        }
       />
-      
+
       {analyticsError && (
-        <ErrorAlert 
+        <ErrorAlert
           message={`Warning: ${analyticsError}. Showing cached data.`}
           type="warning"
           onDismiss={() => dispatch(clearAnalyticsError())}
         />
       )}
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <InfoCard
-          title="Total Employees"
-          value={total_employees}
-          icon={Users}
-          iconColor="text-blue-600"
-          bgColor="bg-blue-100"
-        />
-        <InfoCard
-          title="Active Employees"
-          value={active_employees}
-          icon={UserCheck}
-          iconColor="text-green-600"
-          bgColor="bg-green-100"
-        />
-        <InfoCard
-          title="Attendance Rate"
-          value={`${attendanceRate}%`}
-          icon={TrendingUp}
-          iconColor="text-purple-600"
-          bgColor="bg-purple-100"
-        />
-        <InfoCard
-          title="Period Days"
-          value={period_days}
-          icon={Calendar}
-          iconColor="text-orange-600"
-          bgColor="bg-orange-100"
-        />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <InfoCard title="Total employees" value={total_employees} icon={Users} accent={DASHBOARD_ACCENTS.blue} />
+        <InfoCard title="Active employees" value={active_employees} icon={UserCheck} accent={DASHBOARD_ACCENTS.green} />
+        <InfoCard title="Attendance rate" value={`${attendanceRate}%`} icon={TrendingUp} accent={DASHBOARD_ACCENTS.purple} />
+        <InfoCard title="Period days" value={period_days} icon={Calendar} accent={DASHBOARD_ACCENTS.orange} />
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Employee Status Pie Chart */}
-        <ChartCard
-          title="Employee Status Distribution"
-          subtitle="Active vs Inactive employees"
-        >
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ChartCard title="Employee status" subtitle="Active vs inactive employees">
           <EmployeeStatusPieChart
             totalEmployees={total_employees}
             activeEmployees={active_employees}
@@ -176,12 +136,7 @@ export default function ShopAnalytics() {
             error={analyticsError}
           />
         </ChartCard>
-
-        {/* Analytics Overview Chart */}
-        <ChartCard
-          title="Analytics Overview"
-          subtitle="Performance trends over time"
-        >
+        <ChartCard title="Analytics overview" subtitle="Performance trends over time">
           <AnalyticsOverviewChart
             analytics={analytics}
             loading={isLoadingAnalytics}
@@ -190,58 +145,41 @@ export default function ShopAnalytics() {
         </ChartCard>
       </div>
 
-      {/* Additional Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Demo Performance Chart */}
-        <ChartCard
-          title="Performance Metrics"
-          subtitle="Key performance indicators"
-        >
-          <DemoAnalyticsBarChart
-            loading={isLoadingAnalytics}
-            error={analyticsError}
-          />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ChartCard title="Performance metrics" subtitle="Key performance indicators">
+          <DemoAnalyticsBarChart loading={isLoadingAnalytics} error={analyticsError} />
         </ChartCard>
 
-        {/* Analytics Summary */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <BarChart3 className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Analytics Summary</h3>
+        <div className={`${DASHBOARD_PANEL} p-4 sm:p-5`}>
+          <div className="mb-4 flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-[#007AFF]" />
+            <h3 className="text-sm font-semibold text-gray-900">Analytics summary</h3>
           </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-600">Data Points</span>
-              <span className="text-sm font-semibold text-gray-900">{analytics.length}</span>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-600">Inactive Employees</span>
-              <span className="text-sm font-semibold text-gray-900">{inactiveEmployees}</span>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-600">Activity Rate</span>
-              <span className="text-sm font-semibold text-gray-900">{attendanceRate}%</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-600">Reporting Period</span>
-              <span className="text-sm font-semibold text-gray-900">{period_days} days</span>
-            </div>
+          <div className="space-y-2">
+            {[
+              ['Data points', analytics.length],
+              ['Inactive employees', inactiveEmployees],
+              ['Activity rate', `${attendanceRate}%`],
+              ['Reporting period', `${period_days} days`],
+            ].map(([label, val]) => (
+              <div
+                key={label}
+                className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5"
+              >
+                <span className="text-sm text-gray-600">{label}</span>
+                <span className="text-sm font-semibold text-gray-900">{val}</span>
+              </div>
+            ))}
           </div>
-
           {analytics.length === 0 && (
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                No analytics data available for the selected period. 
-                Data will appear as activities are recorded.
+            <div className="mt-4 rounded-xl border border-amber-200/60 bg-amber-50 p-3">
+              <p className="text-sm text-amber-800">
+                No analytics data for the selected period. Data will appear as activities are recorded.
               </p>
             </div>
           )}
         </div>
       </div>
-    </div>
-  )
+    </PageShell>
+  );
 }

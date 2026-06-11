@@ -1,169 +1,154 @@
-import { useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { fetchShopDetails, clearShopDetails, openEditModal, openDeleteModal } from '../store/slices/companiesSlice'
-import LoadingSpinner from '../components/common/LoadingSpinner'
-import ErrorAlert from '../components/common/ErrorAlert'
-import PageHeader from '../components/common/PageHeader'
-import ShopInfoDisplay from '../components/shop/ShopInfoDisplay'
-import ShopModal from '../components/common/ShopModal'
-import DeleteShopModal from '../components/shop/DeleteShopModal'
-import { Edit, RefreshCw, Trash2, BarChart3 } from 'lucide-react'
+import { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  fetchShopDetails,
+  clearShopDetails,
+  openEditModal,
+  openDeleteModal,
+} from '../store/slices/companiesSlice';
+import { LottieLoader } from '../components/common/Lottie';
+import ErrorAlert from '../components/common/ErrorAlert';
+import PageHeader from '../components/common/PageHeader';
+import PageShell from '../components/common/PageShell';
+import ShopInfoDisplay from '../components/shop/ShopInfoDisplay';
+import ShopModal from '../components/common/ShopModal';
+import DeleteShopModal from '../components/shop/DeleteShopModal';
+import { dashboardToast } from '../utils/dashboardToast';
+import {
+  DASHBOARD_BTN_DESTRUCTIVE,
+  DASHBOARD_BTN_PRIMARY,
+  DASHBOARD_BTN_SECONDARY,
+} from '../theme/dashboardTheme';
+import { Edit, RefreshCw, Trash2, BarChart3, Building2 } from 'lucide-react';
 
 export default function ShopDetails() {
-  const { shopId } = useParams()
-  const navigate = useNavigate()
-  const dispatch = useAppDispatch()
-  const { 
-    shopDetails, 
-    isLoadingDetails, 
-    detailsError 
-  } = useAppSelector(state => state.companies)
+  const { orgId } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { shopDetails, isLoadingDetails, detailsError } = useAppSelector(
+    (state) => state.companies
+  );
 
   useEffect(() => {
-    if (shopId) {
-      dispatch(fetchShopDetails(shopId))
+    if (orgId) {
+      dispatch(fetchShopDetails(orgId));
     }
-
-    // Cleanup function to clear shop details when component unmounts
     return () => {
-      dispatch(clearShopDetails())
-    }
-  }, [dispatch, shopId])
+      dispatch(clearShopDetails());
+    };
+  }, [dispatch, orgId]);
 
   const handleRefresh = () => {
-    if (shopId) {
-      dispatch(fetchShopDetails(shopId))
-      toast.success('Shop details refreshed')
+    if (orgId) {
+      dispatch(fetchShopDetails(orgId));
+      dashboardToast.success('Organization details refreshed.', 'Refreshed');
     }
-  }
+  };
 
   const handleEdit = () => {
-    if (shopDetails) {
-      dispatch(openEditModal(shopDetails))
-    }
-  }
+    if (shopDetails) dispatch(openEditModal(shopDetails));
+  };
 
-  const handleDelete = () => {
-    if (shopDetails) {
-      dispatch(openDeleteModal(shopDetails))
-    }
-  }
+  const handleDisable = () => {
+    if (shopDetails) dispatch(openDeleteModal(shopDetails));
+  };
 
-  const handleAnalytics = () => {
-    if (shopId) {
-      navigate(`/shops/${shopId}/analytics`)
-    }
-  }
+  const isActive = shopDetails?.status === 'active';
 
-  const actions = (
+  const actions = shopDetails ? (
     <>
       <button
+        type="button"
         onClick={handleRefresh}
         disabled={isLoadingDetails}
-        className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:bg-gray-300"
+        className={DASHBOARD_BTN_SECONDARY}
       >
-        <RefreshCw className={`w-4 h-4 ${isLoadingDetails ? 'animate-spin' : ''}`} />
-        <span>Refresh</span>
+        <RefreshCw className={`h-4 w-4 ${isLoadingDetails ? 'animate-spin' : ''}`} />
+        Refresh
+      </button>
+      <button type="button" onClick={handleEdit} className={DASHBOARD_BTN_PRIMARY}>
+        <Edit className="h-4 w-4" />
+        Edit
       </button>
       <button
-        onClick={handleEdit}
-        className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        type="button"
+        onClick={() => navigate(`/organizations/${orgId}/departments`)}
+        className={DASHBOARD_BTN_SECONDARY}
       >
-        <Edit className="w-4 h-4" />
-        <span>Edit Shop</span>
+        <Building2 className="h-4 w-4" />
+        Departments
       </button>
       <button
-        onClick={handleAnalytics}
-        className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+        type="button"
+        onClick={() => navigate(`/organizations/${orgId}/analytics`)}
+        className={DASHBOARD_BTN_SECONDARY}
       >
-        <BarChart3 className="w-4 h-4" />
-        <span>Analytics</span>
+        <BarChart3 className="h-4 w-4" />
+        Stats
       </button>
-      <button
-        onClick={handleDelete}
-        className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-      >
-        <Trash2 className="w-4 h-4" />
-        <span>Delete Shop</span>
-      </button>
+      {isActive && (
+        <button type="button" onClick={handleDisable} className={DASHBOARD_BTN_DESTRUCTIVE}>
+          <Trash2 className="h-4 w-4" />
+          Disable
+        </button>
+      )}
     </>
-  )
+  ) : null;
 
   if (isLoadingDetails && !shopDetails) {
     return (
-      <div className="space-y-6">
-        <PageHeader 
-          title="Loading Shop Details..."
-          showBackButton={true}
-        />
-        <div className="flex items-center justify-center min-h-96">
-          <LoadingSpinner size="large" text="Loading shop details..." />
+      <PageShell className="space-y-6">
+        <PageHeader title="Loading organization…" showBackButton />
+        <div className="flex min-h-96 items-center justify-center">
+          <LottieLoader size="lg" label="Loading organization details..." centered />
         </div>
-      </div>
-    )
+      </PageShell>
+    );
   }
 
   if (detailsError && !shopDetails) {
     return (
-      <div className="space-y-6">
-        <PageHeader 
-          title="Shop Details"
-          subtitle="Error loading shop information"
-          showBackButton={true}
-          actions={actions}
+      <PageShell className="space-y-6">
+        <PageHeader
+          title="Organization details"
+          subtitle="Error loading organization"
+          showBackButton
         />
-        <ErrorAlert 
-          message={detailsError}
-          type="error"
-        />
-      </div>
-    )
+        <ErrorAlert message={detailsError} type="error" />
+      </PageShell>
+    );
   }
 
   if (!shopDetails) {
     return (
-      <div className="space-y-6">
-        <PageHeader 
-          title="Shop Not Found"
-          subtitle="The requested shop could not be found"
-          showBackButton={true}
+      <PageShell className="space-y-6">
+        <PageHeader
+          title="Organization not found"
+          subtitle="The requested organization could not be found"
+          showBackButton
         />
-        <ErrorAlert 
-          message="Shop not found. Please check the shop ID and try again."
+        <ErrorAlert
+          message="Organization not found. Please check the ID and try again."
           type="error"
         />
-      </div>
-    )
+      </PageShell>
+    );
   }
 
+  const code = shopDetails.code || shopDetails.shop_code;
+
   return (
-    <div className="space-y-6">
-      <PageHeader 
+    <PageShell className="space-y-6">
+      <PageHeader
         title={shopDetails.name}
-        subtitle={`Shop Code: ${shopDetails.shop_code}`}
-        showBackButton={true}
+        subtitle={`Code: ${code}`}
+        showBackButton
         actions={actions}
       />
-      
-      {detailsError && (
-        <ErrorAlert 
-          message={`Warning: ${detailsError}. Showing cached data.`}
-          type="warning"
-          onDismiss={() => {
-            // Clear the error
-          }}
-        />
-      )}
-
       <ShopInfoDisplay shop={shopDetails} />
-      
-      {/* Edit Shop Modal */}
       <ShopModal />
-      
-      {/* Delete Shop Modal */}
       <DeleteShopModal />
-    </div>
-  )
+    </PageShell>
+  );
 }

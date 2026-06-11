@@ -1,16 +1,12 @@
-export default function DetailsSection({ 
-  title, 
-  children, 
-  className = '' 
-}) {
+import { DASHBOARD_PANEL } from '../../theme/dashboardTheme';
+
+export default function DetailsSection({ title, children, className = '' }) {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 ${className}`}>
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+    <div className={`${DASHBOARD_PANEL} overflow-hidden ${className}`}>
+      <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
+        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
       </div>
-      <div className="p-6">
-        {children}
-      </div>
+      <div className="p-4 sm:p-5">{children}</div>
     </div>
-  )
+  );
 }

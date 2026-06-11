@@ -1,95 +1,105 @@
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, HelpCircle } from 'lucide-react';
+import ButtonSpinner from './ButtonSpinner/ButtonSpinner';
 
-export default function ConfirmationDialog({
+const VARIANTS = {
+  primary: {
+    icon: CheckCircle2,
+    iconWrap: 'bg-[#007AFF]/10 text-[#007AFF]',
+    confirmClass:
+      'rounded-xl bg-[#007AFF] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0066DD] disabled:cursor-not-allowed disabled:opacity-50',
+  },
+  destructive: {
+    icon: AlertTriangle,
+    iconWrap: 'bg-red-50 text-[#FF3B30]',
+    confirmClass:
+      'rounded-xl bg-[#FF3B30] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#E0352B] disabled:cursor-not-allowed disabled:opacity-50',
+  },
+  neutral: {
+    icon: HelpCircle,
+    iconWrap: 'bg-gray-100 text-gray-600',
+    confirmClass:
+      'rounded-xl bg-[#007AFF] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0066DD] disabled:cursor-not-allowed disabled:opacity-50',
+  },
+};
+
+const ConfirmationDialog = ({
   isOpen,
   onClose,
   onConfirm,
   title,
   message,
+  children,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  type = 'danger',
+  variant = 'primary',
+  type,
+  confirmButtonClass,
   isLoading = false,
-  className = ''
-}) {
-  if (!isOpen) return null
+  confirmDisabled = false,
+}) => {
+  if (!isOpen) return null;
 
-  const typeClasses = {
-    danger: 'bg-red-50 border-red-200',
-    warning: 'bg-amber-50 border-amber-200',
-    info: 'bg-blue-50 border-blue-200'
-  }
-
-  const iconClasses = {
-    danger: 'text-red-600',
-    warning: 'text-amber-600',
-    info: 'text-blue-600'
-  }
-
-  const buttonClasses = {
-    danger: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',
-    warning: 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500',
-    info: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
-  }
-
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget && !isLoading) {
-      onClose()
-    }
-  }
+  const resolvedVariant = type === 'danger' ? 'destructive' : variant;
+  const config = VARIANTS[resolvedVariant] || VARIANTS.primary;
+  const Icon = config.icon;
+  const confirmClass = confirmButtonClass || config.confirmClass;
+  const content = children || message;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 overflow-y-auto"
-      onClick={handleBackdropClick}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm"
+      onClick={onClose}
+      role="presentation"
     >
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
-      
-      {/* Dialog Container */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className={`relative w-full max-w-md ${className}`}>
-          {/* Dialog Content */}
-          <div className={`relative bg-white rounded-lg shadow-xl border ${typeClasses[type]}`}>
-            {/* Header */}
-            <div className="flex items-start p-6">
-              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${iconClasses[type]} bg-white`}>
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <div className="ml-4 flex-1">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {title}
-                </h3>
-                <div className="text-sm text-gray-600 mt-2">
-                  {typeof message === 'string' ? (
-                    <p>{message}</p>
-                  ) : (
-                    message
-                  )}
-                </div>
-              </div>
+      <div
+        className="flex w-full max-w-md flex-col overflow-hidden rounded-2xl border border-gray-200/60 bg-white shadow-[0_2px_16px_rgba(0,0,0,0.06)]"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirmation-dialog-title"
+      >
+        <div className="px-5 py-5">
+          <div className="flex items-start gap-3">
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${config.iconWrap}`}
+            >
+              <Icon className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
             </div>
-            
-            {/* Actions */}
-            <div className="flex items-center justify-end space-x-3 px-6 py-4 bg-gray-50 rounded-b-lg">
-              <button
-                onClick={onClose}
-                disabled={isLoading}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {cancelText}
-              </button>
-              <button
-                onClick={onConfirm}
-                disabled={isLoading}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${buttonClasses[type]}`}
-              >
-                {isLoading ? 'Processing...' : confirmText}
-              </button>
+            <div className="min-w-0 flex-1 pt-0.5">
+              <h3 id="confirmation-dialog-title" className="text-lg font-semibold text-gray-900">
+                {title}
+              </h3>
+              {content && (
+                <div className="mt-1.5 text-sm leading-relaxed text-gray-500">{content}</div>
+              )}
             </div>
           </div>
         </div>
+
+        <div className="flex justify-end gap-3 border-t border-gray-100 px-5 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isLoading}
+            className="rounded-xl border border-gray-200/60 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {cancelText}
+          </button>
+          {onConfirm && (
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={isLoading || confirmDisabled}
+              className={`inline-flex items-center gap-2 ${confirmClass}`}
+            >
+              {isLoading && <ButtonSpinner size="sm" className="text-white" />}
+              {isLoading ? 'Processing…' : confirmText}
+            </button>
+          )}
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default ConfirmationDialog;

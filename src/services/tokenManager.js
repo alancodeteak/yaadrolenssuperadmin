@@ -64,8 +64,7 @@ class TokenManager {
       const payload = JSON.parse(atob(token.split('.')[1]))
       const currentTime = Math.floor(Date.now() / 1000)
       
-      // Check if token is expired (with 5 minute buffer)
-      return payload.exp < (currentTime + 300)
+      return payload.exp <= currentTime
     } catch (error) {
       console.error('Error checking token expiration:', error)
       return true

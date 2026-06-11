@@ -1,0 +1,108 @@
+.dashboard-toast-container {
+  top: 1.25rem !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translateX(-50%) !important;
+  width: auto !important;
+  max-width: calc(100vw - 2rem);
+  padding: 0 !important;
+  pointer-events: none;
+  z-index: 10000 !important;
+}
+
+.dashboard-toast-container .dashboard-toast-item {
+  pointer-events: auto;
+}
+
+.dashboard-toast-item {
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: unset !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+
+.dashboard-toast-body {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.dashboard-toast-item .Toastify__progress-bar {
+  display: none !important;
+}
+
+.dashboard-toast-item.dashboard-toast-enter {
+  animation: dashboardToastIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.dashboard-toast-item.dashboard-toast-exit-none {
+  animation: none !important;
+  opacity: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.dashboard-toast-card {
+  transform-origin: top center;
+  will-change: transform, opacity;
+  transition:
+    opacity 0.34s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.34s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-toast-card--exit {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.97);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  pointer-events: none;
+}
+
+@keyframes dashboardToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast-check-icon {
+  display: block;
+}
+
+.toast-check-circle {
+  transform-origin: 12px 12px;
+  transform: scale(0);
+  animation: toastCheckCircleIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.toast-check-path {
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  animation: toastCheckDraw 0.32s cubic-bezier(0.22, 1, 0.36, 1) 0.22s forwards;
+}
+
+@keyframes toastCheckCircleIn {
+  from {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes toastCheckDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

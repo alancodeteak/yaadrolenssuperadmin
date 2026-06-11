@@ -1,18 +1,23 @@
-import { CheckCircle, XCircle } from 'lucide-react'
+import clsx from 'clsx';
+import { CheckCircle, XCircle } from 'lucide-react';
 
-export default function ShopStatusBadge({ isActive, className = '' }) {
+export default function ShopStatusBadge({ isActive, status, className = '' }) {
+  const active = status ? status === 'active' : isActive;
+
   return (
-    <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${
-      isActive 
-        ? 'bg-green-100 text-green-700' 
-        : 'bg-red-100 text-red-700'
-    } ${className}`}>
-      {isActive ? (
-        <CheckCircle className="w-4 h-4" />
-      ) : (
-        <XCircle className="w-4 h-4" />
+    <span
+      className={clsx(
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold',
+        active ? 'bg-[#34C759]/10 text-[#34C759]' : 'bg-gray-100 text-gray-500',
+        className
       )}
-      <span>{isActive ? 'Active' : 'Inactive'}</span>
-    </div>
-  )
+    >
+      {active ? (
+        <CheckCircle className="h-3.5 w-3.5" />
+      ) : (
+        <XCircle className="h-3.5 w-3.5" />
+      )}
+      {active ? 'Active' : 'Inactive'}
+    </span>
+  );
 }

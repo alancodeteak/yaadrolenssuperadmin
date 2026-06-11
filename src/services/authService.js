@@ -1,7 +1,6 @@
 import axios from 'axios'
 import tokenManager from './tokenManager'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+import { API_BASE_URL, buildUserFromToken } from './api'
 
 class AuthService {
   constructor() {
@@ -18,7 +17,7 @@ class AuthService {
     axios.interceptors.request.use(
       (config) => {
         const token = tokenManager.getAccessToken()
-        if (token && !this.isAccessTokenExpired()) {
+        if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }
         return config
@@ -87,29 +86,31 @@ class AuthService {
     this.failedQueue = []
   }
 
-  // Login user with email and password
   async login(credentials) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, credentials, {
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await axios.post(
+        `${API_BASE_URL}/super-admin/auth/login`,
+        {
+          login_id: credentials.login_id,
+          password: credentials.password,
         },
-        timeout: 10000,
-      })
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000,
+        }
+      )
 
-      const { access_token, refresh_token, user } = response.data
+      const { access_token, refresh_token } = response.data
+      const user = buildUserFromToken(access_token, credentials.login_id)
 
-      // Store tokens and user data
       tokenManager.setTokens(access_token, refresh_token, user)
 
-      return {
-        user,
-        access_token,
-        refresh_token
-      }
+      return { user, access_token, refresh_token }
     } catch (error) {
       console.error('Login error:', error)
-      throw new Error(error.response?.data?.message || 'Login failed')
+      const detail = error.response?.data?.detail
+      const message = typeof detail === 'string' ? detail : 'Login failed'
+      throw new Error(message)
     }
   }
 
@@ -144,31 +145,8 @@ class AuthService {
     }
   }
 
-  // Logout user
   async logout() {
-    try {
-      const refreshToken = tokenManager.getRefreshToken()
-      
-      if (refreshToken) {
-        // Call logout endpoint to invalidate refresh token on server
-        await axios.post(`${API_BASE_URL}/auth/logout`, {
-          refresh_token: refreshToken
-        }, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          timeout: 5000,
-        }).catch(error => {
-          // Don't throw error if logout endpoint fails
-          console.warn('Logout endpoint failed:', error)
-        })
-      }
-    } catch (error) {
-      console.warn('Logout error:', error)
-    } finally {
-      // Always clear local tokens regardless of server response
-      tokenManager.clearTokens()
-    }
+    tokenManager.clearTokens()
   }
 
   // Check if user is authenticated

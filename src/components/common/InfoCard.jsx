@@ -1,24 +1,29 @@
-export default function InfoCard({ 
-  title, 
-  value, 
-  icon: Icon, 
-  iconColor = 'text-blue-600',
-  bgColor = 'bg-blue-100',
-  className = '' 
+import clsx from 'clsx';
+import { DASHBOARD_PANEL } from '../../theme/dashboardTheme';
+
+export default function InfoCard({
+  title,
+  value,
+  icon: Icon,
+  accent = '#007AFF',
+  className = '',
 }) {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
-      <div className="flex items-center justify-between">
+    <div className={clsx(DASHBOARD_PANEL, 'p-4 sm:p-5', className)}>
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          <p className="text-xs font-medium text-gray-500">{title}</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums text-gray-900">{value}</p>
         </div>
         {Icon && (
-          <div className={`w-12 h-12 ${bgColor} rounded-lg flex items-center justify-center`}>
-            <Icon className={`w-6 h-6 ${iconColor}`} />
-          </div>
+          <span
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+            style={{ backgroundColor: `${accent}1A`, color: accent }}
+          >
+            <Icon className="h-5 w-5" strokeWidth={2} />
+          </span>
         )}
       </div>
     </div>
-  )
+  );
 }
