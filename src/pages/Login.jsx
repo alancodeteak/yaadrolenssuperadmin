@@ -64,9 +64,9 @@ export default function Login() {
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 text-center">
           <img
-            src="/assets/yadro-logo-blue.png"
+            src="/assets/yaadrolens-logo.png"
             alt="YaadroLens"
-            className="mx-auto h-14 w-auto"
+            className="mx-auto h-16 w-auto max-w-[280px] object-contain"
           />
           <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#007AFF]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#007AFF]">
             <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />

@@ -17,7 +17,8 @@ const NAV_ITEMS = [
   },
 ];
 
-const YAADRO_LOGO = '/assets/yadro-logo-blue.png';
+const YAADRO_LOGO = '/assets/yaadrolens-logo.png';
+const YAADRO_ICON = '/assets/yaadrolens-icon.png';
 const CODETEAK_LOGO = '/assets/Copy of logo-with-text-ho.png';
 const CODETEAK_URL = 'https://www.codeteak.com/';
 
@@ -26,11 +27,16 @@ const sectionLabelClass =
 
 const SidebarHeader = ({ collapsed }) => (
   <div className="mb-3 shrink-0 border-b border-gray-100 pb-3">
-    <div className={sidebarRowClass(collapsed)}>
+    <div className={clsx(sidebarRowClass(collapsed), !collapsed && 'items-start')}>
       <img
-        src={YAADRO_LOGO}
+        src={collapsed ? YAADRO_ICON : YAADRO_LOGO}
         alt="YaadroLens"
-        className="h-10 w-10 shrink-0 rounded-xl object-contain shadow-[0_2px_8px_rgba(0,122,255,0.25)]"
+        className={clsx(
+          'shrink-0 object-contain',
+          collapsed
+            ? 'h-10 w-10 rounded-xl'
+            : 'h-11 w-auto max-w-[168px] rounded-lg'
+        )}
       />
       <div
         className={clsx(
@@ -39,7 +45,6 @@ const SidebarHeader = ({ collapsed }) => (
         )}
         aria-hidden={collapsed}
       >
-        <p className="truncate text-sm font-semibold text-gray-900">YaadroLens</p>
         <p className="truncate text-[11px] text-gray-500">Super Admin</p>
       </div>
     </div>
@@ -80,17 +85,16 @@ const SidebarFooter = ({ collapsed, onLogout }) => (
       type="button"
       onClick={onLogout}
       title={collapsed ? 'Log out' : undefined}
-      className={sidebarRowClass(
-        collapsed,
-        'rounded-xl font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-[#FF3B30]'
+      className={clsx(
+        collapsed
+          ? 'mx-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-xl'
+          : sidebarRowClass(false),
+        'font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-[#FF3B30]'
       )}
     >
       <LogOut className="h-[18px] w-[18px] shrink-0" strokeWidth={2} aria-hidden="true" />
       <span
-        className={clsx(
-          'truncate text-sm transition-[opacity,width] duration-200',
-          collapsed ? 'w-0 opacity-0' : 'opacity-100'
-        )}
+        className={clsx('truncate text-sm', collapsed ? 'hidden' : 'opacity-100')}
         aria-hidden={collapsed}
       >
         Log out
