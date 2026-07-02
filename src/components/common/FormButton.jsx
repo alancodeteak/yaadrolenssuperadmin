@@ -14,6 +14,7 @@ export default function FormButton({
   onClick,
   children,
   className = '',
+  ...rest
 }) {
   const variantClasses = {
     primary: DASHBOARD_BTN_PRIMARY,
@@ -28,6 +29,7 @@ export default function FormButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={clsx(variantClasses[variant] || DASHBOARD_BTN_PRIMARY, className)}
+      {...rest}
     >
       {loading && <ButtonSpinner size="sm" className={variant === 'outline' ? 'text-gray-600' : 'text-white'} />}
       {children}
