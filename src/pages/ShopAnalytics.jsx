@@ -146,8 +146,13 @@ export default function ShopAnalytics() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ChartCard title="Performance metrics" subtitle="Key performance indicators">
-          <DemoAnalyticsBarChart loading={isLoadingAnalytics} error={analyticsError} />
+        <ChartCard title="Employee breakdown" subtitle="Active vs inactive employees">
+          <DemoAnalyticsBarChart
+            loading={isLoadingAnalytics}
+            error={analyticsError}
+            totalEmployees={total_employees}
+            activeEmployees={active_employees}
+          />
         </ChartCard>
 
         <div className={`${DASHBOARD_PANEL} p-4 sm:p-5`}>

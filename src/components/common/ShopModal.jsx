@@ -84,6 +84,8 @@ export default function ShopModal() {
       newErrors.code = 'Organization code is required'
     } else if (formData.code.trim().length < 2) {
       newErrors.code = 'Code must be at least 2 characters'
+    } else if (formData.code.trim().length > 50) {
+      newErrors.code = 'Code must be at most 50 characters'
     }
 
     if (!editModalOpen) {
@@ -200,7 +202,7 @@ export default function ShopModal() {
               type="text"
               value={formData.name}
               onChange={handleInputChange('name')}
-              placeholder="Acme Corp"
+              placeholder="Organization name"
               error={errors.name}
               required
             />
@@ -209,7 +211,7 @@ export default function ShopModal() {
               type="text"
               value={formData.code}
               onChange={handleInputChange('code')}
-              placeholder="ACME"
+              placeholder="ORG01"
               error={errors.code}
               required
             />
@@ -226,7 +228,7 @@ export default function ShopModal() {
                 type="text"
                 value={formData.admin_name}
                 onChange={handleInputChange('admin_name')}
-                placeholder="Jane Smith"
+                placeholder="Admin full name"
                 error={errors.admin_name}
                 required
               />
@@ -235,7 +237,7 @@ export default function ShopModal() {
                 type="text"
                 value={formData.admin_login_id}
                 onChange={handleInputChange('admin_login_id')}
-                placeholder="jane.admin"
+                placeholder="admin.user"
                 error={errors.admin_login_id}
                 required
               />

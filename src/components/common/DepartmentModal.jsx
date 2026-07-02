@@ -85,9 +85,9 @@ export default function DepartmentModal({ orgId }) {
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Description is required'
-    } else if (formData.description.trim().length < 10) {
-      newErrors.description = 'Description must be at least 10 characters'
+      // Description is optional on the backend
+    } else if (formData.description.trim().length > 500) {
+      newErrors.description = 'Description must be at most 500 characters'
     }
 
     setErrors(newErrors)
@@ -198,9 +198,8 @@ export default function DepartmentModal({ orgId }) {
               type="textarea"
               value={formData.description}
               onChange={handleInputChange('description')}
-              placeholder="Department description"
+              placeholder="Optional department description"
               error={errors.description}
-              required
             />
           </div>
 
