@@ -1,16 +1,28 @@
 import ChartWrapper from './ChartWrapper'
 
-export default function DemoAnalyticsBarChart({ 
-  loading = false, 
-  error = null 
+export default function DemoAnalyticsBarChart({
+  loading = false,
+  error = null,
+  totalEmployees = 0,
+  activeEmployees = 0,
 }) {
-  // Demo data for demonstration
-  const demoData = [
-    { name: 'Attendance Rate', value: 92.5 },
-    { name: 'Productivity', value: 87.3 },
-    { name: 'Efficiency', value: 94.1 },
-    { name: 'Quality Score', value: 89.7 },
-    { name: 'Customer Satisfaction', value: 91.2 }
+  const inactiveEmployees = Math.max(0, totalEmployees - activeEmployees)
+  const hasData = totalEmployees > 0
+
+  if (!loading && !error && !hasData) {
+    return (
+      <div className="flex h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-6 text-center">
+        <p className="text-sm font-medium text-gray-700">No employee data yet</p>
+        <p className="mt-1 text-xs text-gray-500">
+          Metrics will appear once this organization has enrolled employees.
+        </p>
+      </div>
+    )
+  }
+
+  const chartData = [
+    { name: 'Active', value: activeEmployees },
+    { name: 'Inactive', value: inactiveEmployees },
   ]
 
   const chartOptions = {
@@ -18,81 +30,60 @@ export default function DemoAnalyticsBarChart({
       type: 'bar',
       height: 300,
       toolbar: {
-        show: false
-      }
+        show: false,
+      },
     },
-    colors: ['#8B5CF6'],
+    colors: ['#34C759', '#FF9500'],
     plotOptions: {
       bar: {
         borderRadius: 4,
-        columnWidth: '60%',
-        distributed: false
-      }
+        columnWidth: '50%',
+        distributed: true,
+      },
     },
     dataLabels: {
       enabled: true,
-      formatter: function (val) {
-        return val.toFixed(1) + '%'
-      },
       style: {
         fontSize: '12px',
-        colors: ['#fff']
-      }
+        colors: ['#fff'],
+      },
     },
     xaxis: {
-      categories: demoData.map(item => item.name),
+      categories: chartData.map((item) => item.name),
       title: {
-        text: 'Metrics'
+        text: 'Employee status',
       },
-      labels: {
-        rotate: -45,
-        style: {
-          fontSize: '12px'
-        }
-      }
     },
     yaxis: {
       title: {
-        text: 'Percentage (%)'
+        text: 'Count',
       },
       min: 0,
-      max: 100,
+      forceNiceScale: true,
       labels: {
-        formatter: function (val) {
-          return val.toFixed(0) + '%'
-        }
-      }
+        formatter: (val) => Math.round(val),
+      },
     },
     grid: {
       borderColor: '#f1f5f9',
-      strokeDashArray: 5
+      strokeDashArray: 5,
     },
     tooltip: {
       y: {
-        formatter: function (val) {
-          return val.toFixed(1) + '%'
-        }
-      }
+        formatter: (val) => `${Math.round(val)} employees`,
+      },
     },
-    responsive: [{
-      breakpoint: 768,
-      options: {
-        chart: {
-          height: 250
-        },
-        xaxis: {
-          labels: {
-            rotate: -90
-          }
-        }
-      }
-    }]
+    legend: {
+      show: false,
+    },
   }
 
-  const chartSeries = [{
-    name: 'Performance',
-    data: demoData.map(item => item.value)
-  }]
+  const chartSeries = [
+    {
+      name: 'Employees',
+      data: chartData.map((item) => item.value),
+    },
+  ]
 
   return (
     <ChartWrapper

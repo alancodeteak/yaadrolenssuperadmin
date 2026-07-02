@@ -19,7 +19,7 @@ import PageShell from '../components/common/PageShell';
 import { LottieLoader } from '../components/common/Lottie';
 import { DASHBOARD_BTN_PRIMARY, DASHBOARD_BTN_SECONDARY, DASHBOARD_PANEL } from '../theme/dashboardTheme';
 
-// function to manage the organizations in the system.
+
 export default function Companies() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();

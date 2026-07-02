@@ -17,6 +17,24 @@ import { useAppSelector, useAppDispatch } from './store/hooks';
 import { checkAuth, refreshAccessToken } from './store/slices/authSlice';
 import authService from './services/authService';
 import { LoadingScreen } from './components/common/Lottie';
+import { API_BASE_URL } from './services/api';
+
+const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined;
+
+function ConfigError() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <div className="max-w-md rounded-2xl border border-red-200 bg-white p-6 text-center shadow-sm">
+        <h1 className="text-lg font-semibold text-gray-900">Configuration error</h1>
+        <p className="mt-2 text-sm text-gray-600">
+          <code className="rounded bg-gray-100 px-1">VITE_API_BASE_URL</code> is not set. Add it to
+          your <code className="rounded bg-gray-100 px-1">.env</code> file (for example{' '}
+          <code className="rounded bg-gray-100 px-1">http://localhost:8000/api/v1</code>).
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function AppContent() {
   const dispatch = useAppDispatch();
@@ -52,7 +70,7 @@ function AppContent() {
   }
 
   return (
-    <Router>
+    <Router basename={routerBasename}>
       {!isAuthenticated ? (
         <Login />
       ) : (
@@ -99,6 +117,10 @@ function AppContent() {
 }
 
 function App() {
+  if (!API_BASE_URL) {
+    return <ConfigError />;
+  }
+
   return (
     <Provider store={store}>
       <AppContent />
