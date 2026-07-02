@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   fetchShopDetails,
+  fetchFaceMatchingSettings,
   clearShopDetails,
   openEditModal,
   openDeleteModal,
@@ -12,6 +13,7 @@ import ErrorAlert from '../components/common/ErrorAlert';
 import PageHeader from '../components/common/PageHeader';
 import PageShell from '../components/common/PageShell';
 import ShopInfoDisplay from '../components/shop/ShopInfoDisplay';
+import FaceMatchingSettingsCard from '../components/shop/FaceMatchingSettingsCard';
 import ShopModal from '../components/common/ShopModal';
 import DeleteShopModal from '../components/shop/DeleteShopModal';
 import { dashboardToast } from '../utils/dashboardToast';
@@ -42,6 +44,7 @@ export default function ShopDetails() {
   const handleRefresh = () => {
     if (orgId) {
       dispatch(fetchShopDetails(orgId));
+      dispatch(fetchFaceMatchingSettings(orgId));
       dashboardToast.success('Organization details refreshed.', 'Refreshed');
     }
   };
@@ -147,6 +150,7 @@ export default function ShopDetails() {
         actions={actions}
       />
       <ShopInfoDisplay shop={shopDetails} />
+      <FaceMatchingSettingsCard orgId={orgId} />
       <ShopModal />
       <DeleteShopModal />
     </PageShell>

@@ -1,0 +1,86 @@
+# Deploy superadmin SPA to GCS on push to main (merge to main triggers push).
+name: Deploy superadmin frontend (dev)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-superadmin-frontend-dev
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: yaadro-lens
+  GCS_BUCKET: yaadro-lens-lens-dev-superadmin-web
+  GCS_PREFIX: superadmin
+  FRONTEND_URL: http://34.110.234.3/superadmin/
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build -- --base=/superadmin/
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_DEPLOY_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Upload dist to GCS
+        run: |
+          set -euo pipefail
+          DEST="gs://${GCS_BUCKET}/${GCS_PREFIX}"
+
+          # Sync hashed bundles only (never rsync index.html — parallel patch fails on GCS)
+          if [ -d dist/assets ]; then
+            gsutil -m rsync -r -d dist/assets "${DEST}/assets/"
+          fi
+
+          # Copy other root files (favicon, icons, etc.) except index.html
+          for file in dist/*; do
+            [ -f "${file}" ] || continue
+            name="$(basename "${file}")"
+            [ "${name}" = "index.html" ] && continue
+            gsutil cp "${file}" "${DEST}/${name}"
+          done
+
+          # Upload SPA shell last with no-cache headers
+          gsutil -h "Cache-Control:no-cache, max-age=0" \
+            -h "Content-Type:text/html" \
+            cp dist/index.html "${DEST}/index.html"
+
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 10); do
+            if curl -fsSI "${FRONTEND_URL}" | head -1 | grep -qE '200|301|302'; then
+              echo "Superadmin frontend smoke test passed"
+              exit 0
+            fi
+            echo "Waiting for superadmin frontend... (${i}/10)"
+            sleep 10
+          done
+          echo "Superadmin frontend smoke test failed"
+          exit 1

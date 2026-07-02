@@ -6,14 +6,23 @@ import { normalizeOrganization } from '../../utils/normalizeOrganization'
 const getRequestConfig = () => ({ headers: getAuthHeaders(), timeout: 10000 })
 
 async function fetchOrganizationsWithStats() {
-  const [orgsResponse, statsResponse] = await Promise.all([
-    axios.get(`${API_BASE_URL}/super-admin/organizations`, getRequestConfig()),
-    axios.get(`${API_BASE_URL}/super-admin/organizations/stats`, getRequestConfig()),
-  ])
-
-  const statsById = Object.fromEntries(
-    statsResponse.data.map((item) => [item.organization_id, item])
+  const orgsResponse = await axios.get(
+    `${API_BASE_URL}/super-admin/organizations`,
+    getRequestConfig()
   )
+
+  let statsById = {}
+  try {
+    const statsResponse = await axios.get(
+      `${API_BASE_URL}/super-admin/organizations/stats`,
+      getRequestConfig()
+    )
+    statsById = Object.fromEntries(
+      statsResponse.data.map((item) => [item.organization_id, item])
+    )
+  } catch {
+    // Stats are optional — org list should still load if stats endpoint fails
+  }
 
   return orgsResponse.data.map((org) =>
     normalizeOrganization({
@@ -54,6 +63,37 @@ export const fetchShopDetails = createAsyncThunk(
       })
     } catch (error) {
       return rejectWithValue(parseApiError(error, 'Organization not found'))
+    }
+  }
+)
+
+export const fetchFaceMatchingSettings = createAsyncThunk(
+  'companies/fetchFaceMatchingSettings',
+  async (orgId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/super-admin/organizations/${orgId}/settings/face-matching`,
+        getRequestConfig()
+      )
+      return response.data
+    } catch (error) {
+      return rejectWithValue(parseApiError(error, 'Failed to fetch face matching settings'))
+    }
+  }
+)
+
+export const updateFaceMatchingSettings = createAsyncThunk(
+  'companies/updateFaceMatchingSettings',
+  async ({ orgId, similarity_threshold, ambiguity_gap }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/super-admin/organizations/${orgId}/settings/face-matching`,
+        { similarity_threshold, ambiguity_gap },
+        getRequestConfig()
+      )
+      return response.data
+    } catch (error) {
+      return rejectWithValue(parseApiError(error, 'Failed to update face matching settings'))
     }
   }
 )
@@ -263,6 +303,11 @@ const initialState = {
   deletingDepartment: null,
   isDeletingDepartment: false,
   deleteDepartmentError: null,
+  faceMatchingSettings: null,
+  isLoadingFaceMatching: false,
+  isUpdatingFaceMatching: false,
+  faceMatchingError: null,
+  updateFaceMatchingError: null,
 }
 
 const companiesSlice = createSlice({
@@ -284,6 +329,9 @@ const companiesSlice = createSlice({
     clearShopDetails: (state) => {
       state.shopDetails = null
       state.detailsError = null
+      state.faceMatchingSettings = null
+      state.faceMatchingError = null
+      state.updateFaceMatchingError = null
     },
     clearCreateError: (state) => {
       state.createError = null
@@ -399,6 +447,35 @@ const companiesSlice = createSlice({
         state.isLoadingDetails = false
         state.detailsError = action.payload
         state.shopDetails = null
+      })
+      .addCase(fetchFaceMatchingSettings.pending, (state) => {
+        state.isLoadingFaceMatching = true
+        state.faceMatchingError = null
+      })
+      .addCase(fetchFaceMatchingSettings.fulfilled, (state, action) => {
+        state.isLoadingFaceMatching = false
+        if (String(action.payload?.organization_id) === String(action.meta.arg)) {
+          state.faceMatchingSettings = action.payload
+        }
+        state.faceMatchingError = null
+      })
+      .addCase(fetchFaceMatchingSettings.rejected, (state, action) => {
+        state.isLoadingFaceMatching = false
+        state.faceMatchingError = action.payload
+        state.faceMatchingSettings = null
+      })
+      .addCase(updateFaceMatchingSettings.pending, (state) => {
+        state.isUpdatingFaceMatching = true
+        state.updateFaceMatchingError = null
+      })
+      .addCase(updateFaceMatchingSettings.fulfilled, (state, action) => {
+        state.isUpdatingFaceMatching = false
+        state.faceMatchingSettings = action.payload
+        state.updateFaceMatchingError = null
+      })
+      .addCase(updateFaceMatchingSettings.rejected, (state, action) => {
+        state.isUpdatingFaceMatching = false
+        state.updateFaceMatchingError = action.payload
       })
       .addCase(createShop.pending, (state) => {
         state.isCreating = true

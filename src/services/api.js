@@ -3,6 +3,15 @@ import tokenManager from './tokenManager'
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
+export function assertApiBaseUrl() {
+  if (!API_BASE_URL) {
+    throw new Error(
+      'VITE_API_BASE_URL is not set. Add it to .env (e.g. http://localhost:8000/api/v1).'
+    )
+  }
+  return API_BASE_URL
+}
+
 export function getAuthHeaders() {
   const token = tokenManager.getAccessToken()
   const headers = { 'Content-Type': 'application/json' }
